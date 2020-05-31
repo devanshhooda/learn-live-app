@@ -32,8 +32,9 @@ class _LoginPageState extends State<LoginPage> {
   loginProcess() async {
     bool isLogin = await userServices.login(phoneNumber, password);
     if (isLogin) {
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (context) => LearnLiveApp()));
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => LearnLiveApp()),
+          ModalRoute.withName(''));
     }
   }
 
@@ -165,8 +166,8 @@ class _LoginPageState extends State<LoginPage> {
               child: new RaisedButton(
                 // onPressed: filled ? loginProcess() : null,
                 onPressed: filled
-                    ? () {
-                        loginProcess();
+                    ? () async {
+                        await loginProcess();
                       }
                     : null,
                 shape: RoundedRectangleBorder(

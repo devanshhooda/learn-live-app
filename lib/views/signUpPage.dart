@@ -25,6 +25,7 @@ class _SignUpPageState extends State<SignUpPage> {
     super.initState();
   }
 
+  // to check the existence of filled information
   void checkFilled() {
     phoneNumber = _phoneNumber.text;
     password = _password.text;
@@ -60,13 +61,25 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
+  // to confirm the password
+  isPasswordMatch() {
+    if (_password.text == _confirmPassword.text) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   signUpProcess() async {
-    // bool isSignedUp = await userServices.signUp(phoneNumber, password);
-    // if (isSignedUp) {
-    Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => EnterDetailsPage()),
-        ModalRoute.withName('/'));
-    // }
+    bool isSignedUp = await userServices.signUp(phoneNumber, password);
+    if (isSignedUp) {
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+              builder: (context) => EnterDetailsPage(
+                    phoneNumber: phoneNumber,
+                  )),
+          ModalRoute.withName('/'));
+    }
   }
 
   @override
@@ -228,10 +241,10 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               child: new RaisedButton(
                 onPressed: filled
-                    ? () {
+                    ? () async {
                         print('Sign Up');
                         if (isMatch) {
-                          signUpProcess();
+                          await signUpProcess();
                         }
                       }
                     : null,
@@ -253,13 +266,5 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
       ),
     );
-  }
-
-  isPasswordMatch() {
-    if (_password.text == _confirmPassword.text) {
-      return true;
-    } else {
-      return false;
-    }
   }
 }

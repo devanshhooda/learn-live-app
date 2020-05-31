@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
 import 'package:learn_live_app/views/connectsPage.dart';
 import 'package:learn_live_app/views/loginOptionsPage.dart';
@@ -23,12 +24,44 @@ class MyApp extends StatelessWidget {
           primaryColor: Colors.deepPurpleAccent[400],
           primarySwatch: Colors.deepPurple),
       title: 'Learn Live',
-      home: LoginOptionsPage(),
+      home: LoginCheck(),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
+// this is for existence of user
+class LoginCheck extends StatefulWidget {
+  @override
+  _LoginCheckState createState() => _LoginCheckState();
+}
+
+class _LoginCheckState extends State<LoginCheck> {
+  UserServices userServices;
+
+  @override
+  void initState() {
+    userServices = new UserServices();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    SizeConfig().init(context);
+    return FutureBuilder(
+      future: userServices.getUserStatusFromSP(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData && snapshot.data) {
+          return LearnLiveApp();
+        } else {
+          return LoginOptionsPage();
+        }
+      },
+    );
+  }
+}
+
+// this is the home of app
 class LearnLiveApp extends StatefulWidget {
   @override
   _LearnLiveAppState createState() => _LearnLiveAppState();
@@ -58,7 +91,6 @@ class _LearnLiveAppState extends State<LearnLiveApp>
 
   @override
   Widget build(BuildContext context) {
-    SizeConfig().init(context);
     return Scaffold(
       appBar: AppBar(
         title: Text('Learn  Live'),

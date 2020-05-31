@@ -6,10 +6,16 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:learn_live_app/main.dart';
 import 'package:learn_live_app/services/skillsService.dart';
+import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
 import 'loginPage.dart';
 
 class EnterDetailsPage extends StatefulWidget {
+  @required
+  String phoneNumber;
+
+  EnterDetailsPage({this.phoneNumber});
+
   @override
   _EnterDetailsPageState createState() => _EnterDetailsPageState();
 }
@@ -79,6 +85,7 @@ class _EnterDetailsPageState extends State<EnterDetailsPage> {
                   controller: _name,
                   style: inputTextStyle,
                   keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.words,
                   cursorWidth: 2,
                   cursorColor: Colors.indigo,
                   decoration: InputDecoration(
@@ -139,6 +146,7 @@ class _EnterDetailsPageState extends State<EnterDetailsPage> {
                   controller: _profession,
                   style: inputTextStyle,
                   keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.words,
                   cursorWidth: 2,
                   cursorColor: Colors.indigo,
                   decoration: InputDecoration(
@@ -169,6 +177,7 @@ class _EnterDetailsPageState extends State<EnterDetailsPage> {
                   controller: _institute,
                   style: inputTextStyle,
                   keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.words,
                   cursorWidth: 2,
                   cursorColor: Colors.indigo,
                   decoration: InputDecoration(
@@ -229,6 +238,7 @@ class _EnterDetailsPageState extends State<EnterDetailsPage> {
                   controller: _company,
                   style: inputTextStyle,
                   keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.words,
                   cursorWidth: 2,
                   cursorColor: Colors.indigo,
                   decoration: InputDecoration(
@@ -259,6 +269,7 @@ class _EnterDetailsPageState extends State<EnterDetailsPage> {
                   controller: _currentCity,
                   style: inputTextStyle,
                   keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.words,
                   cursorWidth: 2,
                   cursorColor: Colors.indigo,
                   decoration: InputDecoration(
@@ -289,6 +300,7 @@ class _EnterDetailsPageState extends State<EnterDetailsPage> {
                   controller: _homeCity,
                   style: inputTextStyle,
                   keyboardType: TextInputType.text,
+                  textCapitalization: TextCapitalization.words,
                   cursorWidth: 2,
                   cursorColor: Colors.indigo,
                   decoration: InputDecoration(
@@ -315,6 +327,7 @@ class _EnterDetailsPageState extends State<EnterDetailsPage> {
 
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => ChooseProfileImage(
+                            phoneNumber: widget.phoneNumber,
                             name: _name.text,
                             age: _age.text,
                             profession: _profession.text,
@@ -377,6 +390,7 @@ class ChooseProfileImage extends StatefulWidget {
       graduationYear = '',
       currentCity = '',
       homeCity = '';
+  String phoneNumber;
 
   ChooseProfileImage(
       {this.name,
@@ -386,7 +400,8 @@ class ChooseProfileImage extends StatefulWidget {
       this.graduationYear,
       this.company,
       this.currentCity,
-      this.homeCity});
+      this.homeCity,
+      @required this.phoneNumber});
   @override
   _ChooseProfileImageState createState() => _ChooseProfileImageState();
 }
@@ -397,6 +412,13 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
   String skill;
   File _imageFile;
   TextEditingController _bio = new TextEditingController();
+  UserServices userServices;
+
+  @override
+  void initState() {
+    userServices = new UserServices();
+    super.initState();
+  }
 
   Future<void> getImage(int i) async {
     var image;
@@ -417,14 +439,12 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
   }
 
   updateProcess() async {
-    Map<String, dynamic> details;
-    print(widget.name);
-    print(widget.age);
+    Map<String, dynamic> details = new Map<String, dynamic>();
     if (widget.name != null && widget.name.isNotEmpty) {
       details['name'] = widget.name;
     }
-    if (widget.name != null && widget.age.isNotEmpty) {
-      details['age'] = widget.age;
+    if (widget.age != null && widget.age.isNotEmpty) {
+      details['age'] = int.parse(widget.age);
     }
     if (widget.profession != null && widget.profession.isNotEmpty) {
       details['profession'] = widget.profession;
@@ -433,7 +453,7 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
       details['institute'] = widget.institute;
     }
     if (widget.graduationYear != null && widget.graduationYear.isNotEmpty) {
-      details['graduationYear'] = widget.graduationYear;
+      details['graduationYear'] = int.parse(widget.graduationYear);
     }
     if (widget.company != null && widget.company.isNotEmpty) {
       details['company'] = widget.company;
@@ -448,25 +468,25 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
       details['bio'] = _bio.text;
     }
 
-    // for (var i in contents) {
-    //   if (i != null && i.isNotEmpty) {
-    //     // details = {
-    //     //   "$i": i,
-    //     // };
-    //     details.addAll({'i': i});
-    //   }
-    // }
     if (_selectedSkills != null && _selectedSkills.isNotEmpty) {
       for (var s in _selectedSkills) {
-        skills.add(s.name);
+        if (!skills.contains(s.name)) skills.add(s.name);
       }
       if (skills != null && skills.isNotEmpty) {
-        // details.addAll({'intrests': skills});
         details['interests'] = skills;
       }
     }
 
-    print('details : $details');
+    print('details to be updated : $details');
+
+    bool isUpdated =
+        await userServices.updateDetails(widget.phoneNumber, details);
+
+    if (isUpdated) {
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => LearnLiveApp()),
+          ModalRoute.withName(''));
+    }
   }
 
   @override
@@ -648,11 +668,9 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
                 horizontal: SizeConfig.safeBlockHorizontal * 25,
               ),
               child: new RaisedButton(
-                onPressed: () {
+                onPressed: () async {
                   print('Finish');
-                  // Navigator.of(context).push(
-                  //     MaterialPageRoute(builder: (context) => LearnLiveApp()));
-                  updateProcess();
+                  await updateProcess();
                 },
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
