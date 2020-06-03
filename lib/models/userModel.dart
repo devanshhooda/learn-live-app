@@ -1,16 +1,20 @@
 class UserModel {
-  String phoneNumber,
+  String id,
+      phoneNumber,
       name,
-      age,
+      bio,
       profession,
       company,
       institute,
-      graduationYear,
       currentCity,
       homeCity;
+  int age, graduationYear;
+  List connects, sentRequests, receivedRequests;
 
   UserModel(
-      {this.age,
+      {this.id,
+      this.age,
+      this.bio,
       this.currentCity,
       this.graduationYear,
       this.homeCity,
@@ -18,5 +22,8 @@ class UserModel {
       this.company,
       this.institute,
       this.profession,
-      this.phoneNumber});
+      this.phoneNumber,
+      this.connects,
+      this.sentRequests,
+      this.receivedRequests});
 }

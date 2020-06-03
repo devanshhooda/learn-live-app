@@ -74,10 +74,7 @@ class _SignUpPageState extends State<SignUpPage> {
     bool isSignedUp = await userServices.signUp(phoneNumber, password);
     if (isSignedUp) {
       Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-              builder: (context) => EnterDetailsPage(
-                    phoneNumber: phoneNumber,
-                  )),
+          MaterialPageRoute(builder: (context) => EnterDetailsPage()),
           ModalRoute.withName('/'));
     }
   }

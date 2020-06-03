@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:learn_live_app/models/userModel.dart';
 import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
 import 'package:learn_live_app/views/connectsPage.dart';
@@ -49,9 +50,9 @@ class _LoginCheckState extends State<LoginCheck> {
   Widget build(BuildContext context) {
     SizeConfig().init(context);
     return FutureBuilder(
-      future: userServices.getUserStatusFromSP(),
+      future: userServices.getUserIdFromSP(),
       builder: (context, snapshot) {
-        if (snapshot.hasData && snapshot.data) {
+        if (snapshot.hasData) {
           return LearnLiveApp();
         } else {
           return LoginOptionsPage();
@@ -82,6 +83,8 @@ class _LearnLiveAppState extends State<LearnLiveApp>
   ];
 
   TabController controller;
+  // UserModel userModel;
+  UserServices userServices = new UserServices();
 
   @override
   void initState() {
@@ -91,29 +94,43 @@ class _LearnLiveAppState extends State<LearnLiveApp>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Learn  Live'),
-        centerTitle: true,
-        bottom: TabBar(
-          tabs: tabs,
-          controller: controller,
-          indicatorColor: Colors.white,
-        ),
-        actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.notifications),
-              onPressed: () {
-                print('Notifcations Page');
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => NotificationsPage()));
-              })
-        ],
-      ),
-      body: TabBarView(
-        children: <Widget>[PeoplePage(), ConnectsPage(), SettingsPage()],
-        controller: controller,
-      ),
-    );
+    return FutureBuilder<UserModel>(
+        future: userServices.getUser(),
+        builder: (BuildContext context, AsyncSnapshot<UserModel> snapshot) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text('Learn  Live'),
+              centerTitle: true,
+              bottom: TabBar(
+                tabs: tabs,
+                controller: controller,
+                indicatorColor: Colors.white,
+              ),
+              actions: <Widget>[
+                IconButton(
+                    icon: Icon(Icons.notifications),
+                    onPressed: () {
+                      print('Notifcations Page');
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => NotificationsPage(
+                              receivedRequests: snapshot.hasData
+                                  ? snapshot.data.receivedRequests
+                                  : null)));
+                    })
+              ],
+            ),
+            body: TabBarView(
+              children: <Widget>[
+                PeoplePage(),
+                ConnectsPage(
+                  connectsList:
+                      snapshot.hasData ? snapshot.data.connects : null,
+                ),
+                SettingsPage()
+              ],
+              controller: controller,
+            ),
+          );
+        });
   }
 }

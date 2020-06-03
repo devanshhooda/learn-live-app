@@ -5,17 +5,12 @@ import 'package:flutter_tagging/flutter_tagging.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:learn_live_app/main.dart';
-import 'package:learn_live_app/services/skillsService.dart';
+import 'package:learn_live_app/models/skillsModel.dart';
 import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
 import 'loginPage.dart';
 
 class EnterDetailsPage extends StatefulWidget {
-  @required
-  String phoneNumber;
-
-  EnterDetailsPage({this.phoneNumber});
-
   @override
   _EnterDetailsPageState createState() => _EnterDetailsPageState();
 }
@@ -327,7 +322,6 @@ class _EnterDetailsPageState extends State<EnterDetailsPage> {
 
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => ChooseProfileImage(
-                            phoneNumber: widget.phoneNumber,
                             name: _name.text,
                             age: _age.text,
                             profession: _profession.text,
@@ -400,8 +394,7 @@ class ChooseProfileImage extends StatefulWidget {
       this.graduationYear,
       this.company,
       this.currentCity,
-      this.homeCity,
-      @required this.phoneNumber});
+      this.homeCity});
   @override
   _ChooseProfileImageState createState() => _ChooseProfileImageState();
 }
@@ -444,7 +437,8 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
       details['name'] = widget.name;
     }
     if (widget.age != null && widget.age.isNotEmpty) {
-      details['age'] = int.parse(widget.age);
+      // details['age'] = int.parse(widget.age);
+      details['age'] = widget.age;
     }
     if (widget.profession != null && widget.profession.isNotEmpty) {
       details['profession'] = widget.profession;
@@ -453,7 +447,8 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
       details['institute'] = widget.institute;
     }
     if (widget.graduationYear != null && widget.graduationYear.isNotEmpty) {
-      details['graduationYear'] = int.parse(widget.graduationYear);
+      // details['graduationYear'] = int.parse(widget.graduationYear);
+      details['graduationYear'] = widget.graduationYear;
     }
     if (widget.company != null && widget.company.isNotEmpty) {
       details['company'] = widget.company;
@@ -479,8 +474,7 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
 
     print('details to be updated : $details');
 
-    bool isUpdated =
-        await userServices.updateDetails(widget.phoneNumber, details);
+    bool isUpdated = await userServices.updateDetails(details);
 
     if (isUpdated) {
       Navigator.of(context).pushAndRemoveUntil(
@@ -608,11 +602,8 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
                   initialItems: _selectedSkills,
                   textFieldConfiguration: TextFieldConfiguration(
                       style: inputTextStyle,
-                      // controller: _skill,
                       onChanged: (val) {
-                        setState(() {
-                          skill = val;
-                        });
+                        skill = val;
                       },
                       decoration: InputDecoration(
                           border: OutlineInputBorder(
@@ -621,7 +612,7 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
                           fillColor: Colors.black12,
                           hintText: 'Search Skills',
                           hintStyle: hintStyle)),
-                  findSuggestions: SkillsService.getSkills,
+                  findSuggestions: SkillsModel.getSkills,
                   additionCallback: (value) {
                     return Skills(
                       name: value,
@@ -638,11 +629,12 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
                         avatar: Icon(
                           Icons.add_circle,
                           color: Colors.white,
+                          size: SizeConfig.safeBlockVertical * 2.5,
                         ),
-                        label: Text('Add New Tag'),
+                        label: Text('Add new'),
                         labelStyle: TextStyle(
                           color: Colors.white,
-                          fontSize: 14.0,
+                          fontSize: SizeConfig.font_size * 3,
                           fontWeight: FontWeight.w300,
                         ),
                         backgroundColor: Colors.indigo[300],

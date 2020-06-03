@@ -1,6 +1,6 @@
 import 'package:flutter_tagging/flutter_tagging.dart';
 
-class SkillsService {
+class SkillsModel {
   static Future<List<Skills>> getSkills(String query) async {
     await Future.delayed(Duration(milliseconds: 500), null);
     List<Skills> skills = [
