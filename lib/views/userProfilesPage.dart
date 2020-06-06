@@ -7,7 +7,8 @@ import 'package:learn_live_app/utils/sizeConfig.dart';
 
 class UserProfilesPage extends StatefulWidget {
   UserModel userModel;
-  UserProfilesPage({@required this.userModel});
+  bool i;
+  UserProfilesPage({@required this.userModel, this.i});
   @override
   _UserProfilesPageState createState() => _UserProfilesPageState();
 }
@@ -27,6 +28,20 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
       appBar: AppBar(
         title: Text(
             widget.userModel.name != null ? '${widget.userModel.name}' : ''),
+        actions: widget.i
+            ? null
+            : <Widget>[
+                IconButton(
+                    icon: Icon(Icons.videocam),
+                    onPressed: () {
+                      print('Video Calling');
+                    }),
+                IconButton(
+                    icon: Icon(Icons.call),
+                    onPressed: () {
+                      print('Voice Calling');
+                    }),
+              ],
       ),
       body: Container(
         height: SizeConfig.screenHeight,
@@ -94,15 +109,19 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
           borderRadius: BorderRadius.circular(80), color: Colors.greenAccent),
       child: new RaisedButton(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80)),
-        color: Colors.indigo[400],
+        color: widget.i ? Colors.indigo[400] : Colors.red,
         elevation: 0,
-        onPressed: () async {
-          print('Connect');
-          requestSent = await userServices.sendConnectionRequest(id);
-          print('requestSent : $requestSent');
-        },
+        onPressed: widget.i
+            ? () async {
+                print('Connect');
+                requestSent = await userServices.sendConnectionRequest(id);
+                print('requestSent : $requestSent');
+              }
+            : () {
+                print('Disconnect');
+              },
         child: new Text(
-          'Connect',
+          widget.i ? 'Connect' : 'Disconnect',
           style: TextStyle(
               color: Colors.white, fontSize: SizeConfig.font_size * 5),
         ),

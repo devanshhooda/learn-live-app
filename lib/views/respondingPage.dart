@@ -68,8 +68,8 @@ class _RespondingPageState extends State<RespondingPage> {
             SizedBox(
               height: SizeConfig.safeBlockVertical * 2,
             ),
-            acceptButton(),
-            declineButton()
+            decisionButton(true),
+            decisionButton(false)
           ],
         ),
       ),
@@ -88,8 +88,7 @@ class _RespondingPageState extends State<RespondingPage> {
         ));
   }
 
-  Widget acceptButton() {
-    bool requestAccepted;
+  Widget decisionButton(bool i) {
     return new Container(
       margin: EdgeInsets.symmetric(
           vertical: SizeConfig.safeBlockVertical * 1,
@@ -99,16 +98,19 @@ class _RespondingPageState extends State<RespondingPage> {
           borderRadius: BorderRadius.circular(80), color: Colors.greenAccent),
       child: new RaisedButton(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80)),
-        color: Colors.green,
+        color: i ? Colors.green : Colors.red,
         elevation: 0,
         onPressed: () async {
-          print('Accept Request');
-          requestAccepted = await userServices.respondConnectionRequest(
-              widget.userModel.id, true);
-          print('requestAccepted : $requestAccepted');
+          bool processDone = await userServices.respondConnectionRequest(
+              widget.userModel.id, i);
+          print('Decision : $i');
+          print('Process Done ? : $processDone');
+          if (processDone) {
+            Navigator.of(context).pop();
+          }
         },
         child: new Text(
-          'Accept Request',
+          i ? 'Accept Request' : 'Decline Request',
           style: TextStyle(
               color: Colors.white, fontSize: SizeConfig.font_size * 5),
         ),
@@ -116,31 +118,26 @@ class _RespondingPageState extends State<RespondingPage> {
     );
   }
 
-  Widget declineButton() {
-    bool requestDeclined;
-    return new Container(
-      margin: EdgeInsets.symmetric(
-          vertical: SizeConfig.safeBlockVertical * 1,
-          horizontal: SizeConfig.safeBlockHorizontal * 20),
-      height: SizeConfig.blockSizeVertical * 8,
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(80), color: Colors.greenAccent),
-      child: new RaisedButton(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80)),
-        color: Colors.red,
-        elevation: 0,
-        onPressed: () async {
-          print('Decline Request');
-          requestDeclined = await userServices.respondConnectionRequest(
-              widget.userModel.id, false);
-          print('requestDeclined : $requestDeclined');
-        },
-        child: new Text(
-          'Decline Request',
-          style: TextStyle(
-              color: Colors.white, fontSize: SizeConfig.font_size * 5),
-        ),
-      ),
-    );
-  }
+  // Widget declineButton() {
+  //   bool requestDeclined;
+  //   return new Container(
+  //     margin: EdgeInsets.symmetric(
+  //         vertical: SizeConfig.safeBlockVertical * 1,
+  //         horizontal: SizeConfig.safeBlockHorizontal * 20),
+  //     height: SizeConfig.blockSizeVertical * 8,
+  //     decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.circular(80), color: Colors.greenAccent),
+  //     child: new RaisedButton(
+  //       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80)),
+  //       color: Colors.red,
+  //       elevation: 0,
+  //       onPressed:
+  //       child: new Text(
+  //         'Decline Request',
+  //         style: TextStyle(
+  //             color: Colors.white, fontSize: SizeConfig.font_size * 5),
+  //       ),
+  //     ),
+  //   );
+  // }
 }

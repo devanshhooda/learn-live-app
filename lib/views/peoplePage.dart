@@ -8,7 +8,6 @@ import 'package:learn_live_app/models/userModel.dart';
 import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
 import 'package:learn_live_app/views/userProfilesPage.dart';
-
 import 'loginPage.dart';
 
 class PeoplePage extends StatefulWidget {
@@ -30,7 +29,18 @@ class _PeoplePageState extends State<PeoplePage> {
   List selectedInstitutes = new List();
   String profession = '', company = '', institute = '';
   Map<String, dynamic> filters = new Map<String, dynamic>();
+  bool filterApplied = false;
+
   applyFilters() {
+    if (filters.isNotEmpty) {
+      setState(() {
+        filterApplied = true;
+      });
+    } else {
+      setState(() {
+        filterApplied = false;
+      });
+    }
     print('$filters');
   }
 
@@ -136,25 +146,26 @@ class _PeoplePageState extends State<PeoplePage> {
                                             if (!selectedProfessions
                                                 .contains(p.name))
                                               selectedProfessions.add(p.name);
+                                            else
+                                              selectedProfessions
+                                                  .remove(p.name);
                                           }
                                           if (selectedProfessions != null &&
                                               selectedProfessions.isNotEmpty) {
-                                            setState(() {
-                                              filters['profession'] =
-                                                  selectedProfessions;
-                                            });
+                                            filters['profession'] =
+                                                selectedProfessions;
                                           }
                                         }
                                         print(selectedProfessions);
                                         applyFilters();
                                         Navigator.of(context).pop();
                                       },
-                                      child: Text('Apply')),
-                                  FlatButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text('Cancel'))
+                                      child: Text('Done')),
+                                  // FlatButton(
+                                  //     onPressed: () {
+                                  //       Navigator.of(context).pop();
+                                  //     },
+                                  //     child: Text('Cancel'))
                                 ],
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20)),
@@ -237,6 +248,8 @@ class _PeoplePageState extends State<PeoplePage> {
                                             if (!selectedCompanies
                                                 .contains(c.name))
                                               selectedCompanies.add(c.name);
+                                            else
+                                              selectedCompanies.remove(c.name);
                                           }
                                           if (selectedCompanies != null &&
                                               selectedCompanies.isNotEmpty) {
@@ -248,12 +261,12 @@ class _PeoplePageState extends State<PeoplePage> {
                                         applyFilters();
                                         Navigator.of(context).pop();
                                       },
-                                      child: Text('Apply')),
-                                  FlatButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text('Cancel'))
+                                      child: Text('Done')),
+                                  // FlatButton(
+                                  //     onPressed: () {
+                                  //       Navigator.of(context).pop();
+                                  //     },
+                                  //     child: Text('Cancel'))
                                 ],
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20)),
@@ -336,6 +349,8 @@ class _PeoplePageState extends State<PeoplePage> {
                                             if (!selectedInstitutes
                                                 .contains(i.name))
                                               selectedInstitutes.add(i.name);
+                                            else
+                                              selectedInstitutes.remove(i.name);
                                           }
                                           if (selectedInstitutes != null &&
                                               selectedInstitutes.isNotEmpty) {
@@ -347,12 +362,12 @@ class _PeoplePageState extends State<PeoplePage> {
                                         applyFilters();
                                         Navigator.of(context).pop();
                                       },
-                                      child: Text('Apply')),
-                                  FlatButton(
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Text('Cancel'))
+                                      child: Text('Done')),
+                                  // FlatButton(
+                                  //     onPressed: () {
+                                  //       Navigator.of(context).pop();
+                                  //     },
+                                  //     child: Text('Cancel'))
                                 ],
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20)),
@@ -365,18 +380,15 @@ class _PeoplePageState extends State<PeoplePage> {
               Expanded(
                 child: Container(
                     child: FutureBuilder<List<UserModel>>(
-                  future: userServices.getUsers(),
+                  future: filterApplied
+                      ? userServices.getUsersWithFilters(filters)
+                      : userServices.getUsers(),
                   builder: (BuildContext context,
                       AsyncSnapshot<List<UserModel>> snapshot) {
                     if (snapshot.data != null && snapshot.hasData) {
                       return ListView.builder(
                           itemCount: snapshot.data.length,
                           itemBuilder: (context, i) {
-                            // return userWidget(
-                            //     snapshot.data[i].name,
-                            //     snapshot.data[i].age,
-                            //     snapshot.data[i].profession,
-                            //     snapshot.data[i].company);
                             return UserWidget(userModel: snapshot.data[i]);
                           });
                     }
@@ -471,8 +483,10 @@ class UserWidget extends StatelessWidget {
             ),
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) =>
-                      UserProfilesPage(userModel: userModel)));
+                  builder: (context) => UserProfilesPage(
+                        userModel: userModel,
+                        i: true,
+                      )));
             },
           ),
           Padding(

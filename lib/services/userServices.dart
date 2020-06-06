@@ -189,7 +189,7 @@ class UserServices with ChangeNotifier {
             profession: userDetails['profession'],
             company: userDetails['company'],
             institute: userDetails['institute'],
-            graduationYear: userDetails['graduationyear'],
+            graduationYear: userDetails['graduationYear'],
             currentCity: userDetails['currentCity'],
             homeCity: userDetails['homeCity'],
             connects: userDetails['connects'],
@@ -248,6 +248,51 @@ class UserServices with ChangeNotifier {
     }
   }
 
+  Future<List<UserModel>> getUsersWithFilters(var filters) async {
+    String filterUsersUrl = url + '/showOnly';
+    List<UserModel> usersList = [];
+    try {
+      token = await getTokenFromSP();
+      var body = json.encode(filters);
+      print('body to parse : $body');
+      http.Response response = await http.put(filterUsersUrl,
+          headers: <String, String>{
+            'Authorization': 'jwt ' + token,
+            "Content-Type": "application/json"
+          },
+          body: body);
+      print('response : ${response.body}');
+      var data = await json.decode(response.body);
+      print('message : ${data['message']}');
+      print('data : $data');
+      var users = data['users'];
+      print('users : $users');
+      userId = await getUserIdFromSP();
+      for (var u in users) {
+        // print('adding $u');
+        UserModel userModel = UserModel(
+            id: u['_id'],
+            phoneNumber: u['phoneNumber'],
+            name: u['name'],
+            age: u['age'],
+            bio: u['bio'],
+            profession: u['profession'],
+            company: u['company'],
+            institute: u['institute'],
+            graduationYear: u['graduationYear'],
+            currentCity: u['currentCity'],
+            homeCity: u['homeCity']);
+        if (userModel.id != userId) {
+          usersList.add(userModel);
+        }
+        // usersList.add(userModel);
+        return usersList;
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
   Future<bool> sendConnectionRequest(String receivingId) async {
     String sendReuestUrl = url + '/sendConnectionRequest';
     try {
@@ -285,6 +330,7 @@ class UserServices with ChangeNotifier {
         'receivingId': receivingId,
         'connectResponse': connectResponse
       });
+      print('sending body : $body');
       token = await getTokenFromSP();
       http.Response response = await http.put(respondRequestUrl,
           headers: <String, String>{
@@ -300,6 +346,20 @@ class UserServices with ChangeNotifier {
       } else {
         return false;
       }
+    } catch (e) {
+      print(e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> signOut() async {
+    try {
+      if (sharedPreferences == null) {
+        sharedPreferences = await SharedPreferences.getInstance();
+      }
+      sharedPreferences.remove('token');
+      sharedPreferences.remove('userId');
+      return true;
     } catch (e) {
       print(e.toString());
       return false;

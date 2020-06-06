@@ -38,7 +38,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               ? ListView.builder(
                   itemCount: widget.receivedRequests.length,
                   itemBuilder: (context, i) {
-                    return FutureBuilder(
+                    return FutureBuilder<UserModel>(
                         future: userServices
                             .getUserByUid(widget.receivedRequests[i]),
                         builder: (BuildContext context,
@@ -53,26 +53,11 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                       'assets/profile_pic.svg',
                                     ),
                                   ),
-                                  title: Row(
-                                    children: <Widget>[
-                                      Text(snapshot.data.name != null
-                                          ? '${snapshot.data.name}, '
-                                          : ''),
-                                      Text(snapshot.data.age != null
-                                          ? '${snapshot.data.age}'
-                                          : '')
-                                    ],
-                                  ),
-                                  subtitle: Row(
-                                    children: <Widget>[
-                                      Text(snapshot.data.profession != null
-                                          ? '${snapshot.data.profession}, '
-                                          : ''),
-                                      Text(snapshot.data.company != null
-                                          ? '${snapshot.data.company}'
-                                          : '')
-                                    ],
-                                  ),
+                                  title: Text(snapshot.data.name != null
+                                      ? '${snapshot.data.name}'
+                                      : '${snapshot.data.phoneNumber}'),
+                                  subtitle:
+                                      Text('sent you a connection request'),
                                   onTap: () {
                                     Navigator.of(context).push(
                                         MaterialPageRoute(
@@ -97,7 +82,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         });
                   })
               : Center(
-                  child: Text('No connects'),
+                  child: Text('No new requests'),
                 )),
     );
   }
