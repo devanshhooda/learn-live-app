@@ -30,6 +30,6 @@ class SizeConfig {
     safeBlockHorizontal = (screenWidth - _safeAreaHorizontal) / 100;
     safeBlockVertical = (screenHeight - _safeAreaVertical) / 100;
 
-    font_size = (safeBlockHorizontal + safeBlockHorizontal) / 2;
+    font_size = (blockSizeHorizontal + safeBlockHorizontal) / 2;
   }
 }

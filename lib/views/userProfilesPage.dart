@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:learn_live_app/models/userModel.dart';
 import 'package:learn_live_app/services/userServices.dart';
+import 'package:learn_live_app/services/videoCallService.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
 
 class UserProfilesPage extends StatefulWidget {
@@ -15,10 +16,11 @@ class UserProfilesPage extends StatefulWidget {
 
 class _UserProfilesPageState extends State<UserProfilesPage> {
   UserServices userServices;
-
+  VideoCallService videoCallService;
   @override
   void initState() {
     userServices = new UserServices();
+    videoCallService = new VideoCallService();
     super.initState();
   }
 
@@ -34,12 +36,8 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
                 IconButton(
                     icon: Icon(Icons.videocam),
                     onPressed: () {
-                      print('Video Calling');
-                    }),
-                IconButton(
-                    icon: Icon(Icons.call),
-                    onPressed: () {
-                      print('Voice Calling');
+                      print('Calling');
+                      videoCallService.joinMeeting(widget.userModel.name);
                     }),
               ],
       ),

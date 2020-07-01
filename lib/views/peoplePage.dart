@@ -467,20 +467,22 @@ class UserWidget extends StatelessWidget {
                 'assets/profile_pic.svg',
               ),
             ),
-            title: Row(
-              children: <Widget>[
-                Text(userModel.name != null ? '${userModel.name}, ' : ''),
-                Text(userModel.age != null ? '${userModel.age}' : '')
-              ],
-            ),
-            subtitle: Row(
-              children: <Widget>[
-                Text(userModel.profession != null
-                    ? '${userModel.profession}, '
-                    : ''),
-                Text(userModel.company != null ? '${userModel.company}' : '')
-              ],
-            ),
+            title: (userModel.name == null && userModel.age == null)
+                ? null
+                : (userModel.name != null && userModel.age == null)
+                    ? Text('${userModel.name}')
+                    : (userModel.name == null && userModel.age != null)
+                        ? Text('${userModel.age}')
+                        : Text('${userModel.name}, ${userModel.age}'),
+            subtitle: (userModel.profession == null &&
+                    userModel.company == null)
+                ? null
+                : (userModel.profession != null && userModel.company == null)
+                    ? Text('${userModel.profession}')
+                    : (userModel.profession == null &&
+                            userModel.company != null)
+                        ? Text('${userModel.company}')
+                        : Text('${userModel.profession}, ${userModel.company}'),
             onTap: () {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => UserProfilesPage(

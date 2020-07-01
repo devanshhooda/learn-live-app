@@ -1,15 +1,36 @@
 import 'dart:convert';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:learn_live_app/models/userModel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserServices with ChangeNotifier {
-  String url = 'http://192.168.43.223:3000/api/user';
+  String url = 'http://3.7.45.191:3000/api/user';
+  // String url = 'http://192.168.43.223:3000/api/user';
   String token, userId;
   var userDetails;
   SharedPreferences sharedPreferences;
+  FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
+  String fcmToken;
+
+  UserServices() {
+    _firebaseMessaging.configure(
+        onMessage: (Map<String, dynamic> message) async {
+      print('onMessage : $message');
+    }, onLaunch: (Map<String, dynamic> message) async {
+      print('onLaunch : $message');
+    }, onResume: (Map<String, dynamic> message) async {
+      print('onResume : $message');
+    });
+
+    if (fcmToken == null || fcmToken.isEmpty) {
+      _firebaseMessaging.getToken().then((_token) {
+        fcmToken = _token;
+      });
+    }
+  }
 
   addTokenToSP(String token) async {
     // print("Add Token: $token");
@@ -48,8 +69,11 @@ class UserServices with ChangeNotifier {
     print(password);
     String signUpUrl = url + '/create';
     try {
-      http.Response response = await http.post(signUpUrl,
-          body: {'phoneNumber': phoneNumber, 'password': password});
+      http.Response response = await http.post(signUpUrl, body: {
+        'phoneNumber': phoneNumber,
+        'password': password,
+        'fcmToken': fcmToken
+      });
       var data = json.decode(response.body);
       print(data);
       print('message : ${data['message']}');
@@ -109,9 +133,17 @@ class UserServices with ChangeNotifier {
 
   Future<bool> login(String phoneNumber, String password) async {
     String loginUrl = url + '/login';
+    print(loginUrl);
+    print(phoneNumber);
+    print(password);
+    print('fcmToken: $fcmToken');
     try {
-      http.Response response = await http.post(loginUrl,
-          body: {'phoneNumber': phoneNumber, 'password': password});
+      http.Response response = await http.post(loginUrl, body: {
+        'phoneNumber': phoneNumber,
+        'password': password,
+        'fcmToken': fcmToken
+      });
+      print(response.body);
       var data = json.decode(response.body);
       print(data);
       print('message : ${data['message']}');
@@ -144,10 +176,10 @@ class UserServices with ChangeNotifier {
       token = await getTokenFromSP();
       http.Response response = await http.get(getUserUrl,
           headers: <String, String>{'Authorization': 'jwt ' + token});
-      print(response.body);
+      // print(response.body);
       var data = json.decode(response.body);
       userDetails = data['userDetails'];
-      print('userDetails : $userDetails');
+      // print('userDetails : $userDetails');
       print('message : ${data['message']}');
       if (data['status']) {
         UserModel userModel = new UserModel(
@@ -176,10 +208,10 @@ class UserServices with ChangeNotifier {
       token = await getTokenFromSP();
       http.Response response = await http.get(getUserUrl,
           headers: <String, String>{'Authorization': 'jwt ' + token});
-      print(response.body);
+      // print(response.body);
       var data = json.decode(response.body);
       userDetails = data['userDetails'];
-      print('userDetails : $userDetails');
+      // print('userDetails : $userDetails');
       print('message : ${data['message']}');
       if (data['status']) {
         UserModel userModel = new UserModel(
@@ -203,16 +235,10 @@ class UserServices with ChangeNotifier {
   }
 
   Future<List<UserModel>> getUsers() async {
-    // String profession, String company, String institute) async {
-    // UserModel userModel;
-    // List<UserModel> usersList = new List<UserModel>();
     List<UserModel> usersList = [];
     String showAllUrl = url + '/showAll';
-    // String showAllUrl = url +
-    //     '/showAll?profession=$profession&company=$company&institute=$institute';
     try {
       token = await getTokenFromSP();
-      // userId = await getUserIdFromSP();
       http.Response response = await http.get(showAllUrl,
           headers: <String, String>{'Authorization': 'jwt ' + token});
       // print('response : ${response.body}');
@@ -351,6 +377,11 @@ class UserServices with ChangeNotifier {
       return false;
     }
   }
+
+  // Future<bool> requestVideoCall() async {
+  //   String requestVideoCallUrl = url + '';
+
+  // }
 
   Future<bool> signOut() async {
     try {

@@ -417,9 +417,11 @@ class _ChooseProfileImageState extends State<ChooseProfileImage> {
     var image;
     try {
       if (i == 0) {
-        image = await ImagePicker.pickImage(source: ImageSource.camera);
+        image =
+            await ImagePicker.platform.pickImage(source: ImageSource.camera);
       } else if (i == 1) {
-        image = await ImagePicker.pickImage(source: ImageSource.gallery);
+        image =
+            await ImagePicker.platform.pickImage(source: ImageSource.gallery);
       }
     } catch (e) {
       print(e.toString());
