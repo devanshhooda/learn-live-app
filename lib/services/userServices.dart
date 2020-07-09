@@ -1,27 +1,34 @@
 import 'dart:convert';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:learn_live_app/models/userModel.dart';
+import 'package:learn_live_app/services/notificationServices.dart';
+import 'package:learn_live_app/services/videoCallService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserServices with ChangeNotifier {
-  String url = 'http://3.7.45.191:3000/api/user';
-  // String url = 'http://192.168.43.223:3000/api/user';
+  // String url = 'http://3.7.45.191:3000/api/user';
+  String url = 'http://192.168.43.223:3000/api/user';
   String token, userId;
   var userDetails;
   SharedPreferences sharedPreferences;
   FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
   String fcmToken;
+  VideoCallService videoCallService = new VideoCallService();
+  NotificationServices _notificationServices = NotificationServices();
 
   UserServices() {
     _firebaseMessaging.configure(
         onMessage: (Map<String, dynamic> message) async {
+      _messageHandler(message);
       print('onMessage : $message');
     }, onLaunch: (Map<String, dynamic> message) async {
+      _messageHandler(message);
       print('onLaunch : $message');
     }, onResume: (Map<String, dynamic> message) async {
+      _messageHandler(message);
       print('onResume : $message');
     });
 
@@ -29,6 +36,19 @@ class UserServices with ChangeNotifier {
       _firebaseMessaging.getToken().then((_token) {
         fcmToken = _token;
       });
+    }
+  }
+
+  _messageHandler(Map<String, dynamic> message) async {
+    String messageType = message['type'];
+    if (messageType == 'Video call request') {
+      String remoteDescription = message['data']['offer'];
+      // String candidateDescription = message['data']['candidate'];
+      await videoCallService.setRemoteDescription(remoteDescription);
+      await _notificationServices.incomingCallNotification(message);
+    } else if (messageType == 'Video call answer') {
+      String remoteDescription = message['data']['answer'];
+      await videoCallService.setRemoteDescription(remoteDescription);
     }
   }
 
@@ -182,6 +202,7 @@ class UserServices with ChangeNotifier {
       // print('userDetails : $userDetails');
       print('message : ${data['message']}');
       if (data['status']) {
+        notifyListeners();
         UserModel userModel = new UserModel(
             id: userDetails['_id'],
             name: userDetails['name'],
@@ -378,10 +399,60 @@ class UserServices with ChangeNotifier {
     }
   }
 
-  // Future<bool> requestVideoCall() async {
-  //   String requestVideoCallUrl = url + '';
+  Future<bool> requestVideoCall(String receivingId, String sendingId,
+      String callerName, String offer, String candidate) async {
+    String requestVideoCallUrl = url + '/sendCallRequest';
+    try {
+      token = await getTokenFromSP();
+      http.Response response =
+          await http.put(requestVideoCallUrl, headers: <String, String>{
+        'Authorization': 'jwt ' + token,
+      }, body: {
+        'receivingId': receivingId,
+        'sendingId': sendingId,
+        'callerName': callerName,
+        'offer': offer,
+        'candidate': candidate
+      });
+      // print('response : ${response.body}');
+      var data = json.decode(response.body);
+      // print('data : $data');
+      print('${data['message']}');
+      if (data['status']) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
 
-  // }
+  Future<bool> sendCallAnswer(String answer) async {
+    String requestVideoCallUrl = url + '/answerCallRequest';
+    try {
+      token = await getTokenFromSP();
+      http.Response response =
+          await http.put(requestVideoCallUrl, headers: <String, String>{
+        'Authorization': 'jwt ' + token,
+      }, body: {
+        'answer': answer
+      });
+      // print('response : ${response.body}');
+      var data = json.decode(response.body);
+      // print('data : $data');
+      print('${data['message']}');
+      if (data['status']) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
 
   Future<bool> signOut() async {
     try {

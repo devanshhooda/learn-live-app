@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:learn_live_app/main.dart';
 import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
+
+import '../main.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -51,4 +52,32 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
+
+  // Future onSelectNotification(String payload) async {
+  //   if (payload != null) {
+  //     debugPrint('notification payload: ' + payload);
+  //   }
+  // }
+
+  // showNotification() {
+  //   try {
+  //     var android = new AndroidNotificationDetails(
+  //       'channel id',
+  //       'channelName',
+  //       'channelDescription',
+  //       importance: Importance.Max,
+  //       priority: Priority.Max,
+  //       playSound: true,
+  //       enableVibration: true,
+  //     );
+  //     var iOS = new IOSNotificationDetails();
+  //     var platform = NotificationDetails(android, iOS);
+  //     flutterLocalNotificationsPlugin.show(0, 'title', 'body', platform,
+  //         payload: 'Hello');
+  //     // flutterLocalNotificationsPlugin.periodicallyShow(
+  //     //     0, 'title', 'body', RepeatInterval.EveryMinute, platform);
+  //   } catch (e) {
+  //     print(e);
+  //   }
+  // }
 }

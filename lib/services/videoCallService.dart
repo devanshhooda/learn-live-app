@@ -1,91 +1,164 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:jitsi_meet/jitsi_meet.dart';
-import 'package:jitsi_meet/jitsi_meeting_listener.dart';
-import 'package:jitsi_meet/room_name_constraint.dart';
-import 'package:jitsi_meet/room_name_constraint_type.dart';
+import 'dart:convert';
+import 'package:flutter_webrtc/webrtc.dart';
+import 'package:sdp_transform/sdp_transform.dart';
 
 class VideoCallService {
-  final serverText = TextEditingController();
-  // _onAudioOnlyChanged(bool value) {
-  //   setState(() {
-  //     isAudioOnly = value;
-  //   });
-  // }
+  RTCVideoRenderer localVideoRenderer = RTCVideoRenderer();
+  RTCVideoRenderer remoteVideoRenderer = RTCVideoRenderer();
+  bool offer = false;
+  RTCPeerConnection _peerConnection;
+  MediaStream localStream, remoteStream;
+  List candidates = List();
 
-  // _onAudioMutedChanged(bool value) {
-  //   setState(() {
-  //     isAudioMuted = value;
-  //   });
-  // }
+  VideoCallService() {
+    _initRederers();
+    _createPeerConnection().then((pc) {
+      _peerConnection = pc;
+    });
+  }
 
-  // _onVideoMutedChanged(bool value) {
-  //   setState(() {
-  //     isVideoMuted = value;
-  //   });
-  // }
-
-  joinMeeting(String userName) async {
-    String serverUrl =
-        serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
-
+  _initRederers() async {
     try {
-      var options = JitsiMeetingOptions()
-        ..room = 'learnliveroom'
-        ..serverURL = serverUrl
-        ..subject = 'Video Call'
-        ..userDisplayName = userName
-        ..userEmail = 'fake@email.com'
-        ..audioOnly = false
-        ..audioMuted = false
-        ..videoMuted = false
-        ..inviteEnabled = true
-        ..chatEnabled = true;
-
-      // debugPrint("JitsiMeetingOptions: $options");
-      await JitsiMeet.joinMeeting(
-        options,
-        listener: JitsiMeetingListener(onConferenceWillJoin: ({message}) {
-          debugPrint("${options.room} will join with message: $message");
-        }, onConferenceJoined: ({message}) {
-          debugPrint("${options.room} joined with message: $message");
-        }, onConferenceTerminated: ({message}) {
-          debugPrint("${options.room} terminated with message: $message");
-        }),
-        // by default, plugin default constraints are used
-        //roomNameConstraints: new Map(), // to disable all constraints
-        //roomNameConstraints: customContraints, // to use your own constraint(s)
-      );
-    } catch (error) {
-      debugPrint("error: $error");
+      await localVideoRenderer.initialize();
+      await remoteVideoRenderer.initialize();
+    } catch (e) {
+      print(e);
     }
   }
 
-  static final Map<RoomNameConstraintType, RoomNameConstraint>
-      customContraints = {
-    RoomNameConstraintType.MAX_LENGTH: new RoomNameConstraint((value) {
-      return value.trim().length <= 50;
-    }, "Maximum room name length should be 30."),
-    RoomNameConstraintType.FORBIDDEN_CHARS: new RoomNameConstraint((value) {
-      return RegExp(r"[$€£]+", caseSensitive: false, multiLine: false)
-              .hasMatch(value) ==
-          false;
-    }, "Currencies characters aren't allowed in room names."),
-  };
+  getUserMedia() async {
+    Map<String, dynamic> mediaConstraints = {
+      'audio': true,
+      'video': {'facingMode': 'user'}
+    };
 
-  void _onConferenceWillJoin({message}) {
-    debugPrint("_onConferenceWillJoin broadcasted with message: $message");
+    try {
+      MediaStream mediaStream = await navigator.getUserMedia(mediaConstraints);
+
+      localVideoRenderer.srcObject = mediaStream;
+      localVideoRenderer.mirror = true;
+
+      return mediaStream;
+    } catch (e) {
+      print(e);
+    }
   }
 
-  void _onConferenceJoined({message}) {
-    debugPrint("_onConferenceJoined broadcasted with message: $message");
+  _createPeerConnection() async {
+    Map<String, dynamic> configuration = {
+      "iceServers": [
+        {"url": "stun:stun.l.google.com:19302"}
+      ]
+    };
+
+    final Map<String, dynamic> offerConstraints = {
+      "mandatory": {"OfferToReceiveAudio": true, "OfferToReceiveVideo": true},
+      "optional": []
+    };
+
+    try {
+      localStream = await getUserMedia();
+
+      RTCPeerConnection rtcPeerConnection =
+          await createPeerConnection(configuration, offerConstraints);
+
+      rtcPeerConnection.addStream(localStream);
+
+      rtcPeerConnection.onIceCandidate = (e) {
+        if (e.candidate != null) {
+          var candidate = json.encode({
+            'candidate': e.candidate.toString(),
+            'sdpMid': e.sdpMid.toString(),
+            'sdpMlineIndex': e.sdpMlineIndex,
+          });
+          candidates.add(candidate);
+          print('candidates : $candidates');
+        }
+      };
+
+      rtcPeerConnection.onIceConnectionState = (e) {
+        print('pcIceConnectionState : $e');
+      };
+
+      rtcPeerConnection.onAddStream = (stream) {
+        print('add stream : ${stream.id}');
+        remoteVideoRenderer.srcObject = stream;
+      };
+
+      return rtcPeerConnection;
+    } catch (e) {
+      print(e);
+    }
   }
 
-  void _onConferenceTerminated({message}) {
-    debugPrint("_onConferenceTerminated broadcasted with message: $message");
+  createOffer() async {
+    try {
+      RTCSessionDescription rtcSessionDescription =
+          await _peerConnection.createOffer({"OfferToReceiveVideo": true});
+      var session = parse(rtcSessionDescription.sdp);
+      var offerSessionBody = json.encode(session);
+      print('createOffer sessionJsonBody : $offerSessionBody');
+      // print('$offerSessionBody');
+
+      offer = true;
+
+      _peerConnection.setLocalDescription(rtcSessionDescription);
+
+      return offerSessionBody;
+    } catch (e) {
+      print(e);
+    }
   }
 
-  _onError(error) {
-    debugPrint("_onError broadcasted: $error");
+  setRemoteDescription(String remoteDescription) async {
+    try {
+      dynamic session = jsonDecode('$remoteDescription');
+
+      String sdp = write(session, null);
+
+      RTCSessionDescription sessionDescription =
+          new RTCSessionDescription(sdp, offer ? 'answer' : 'offer');
+
+      print('sessionDescription : ${sessionDescription.toMap()}');
+
+      await _peerConnection.setRemoteDescription(sessionDescription);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  setCandidate(String candidateDescription) async {
+    try {
+      dynamic session = jsonDecode('$candidateDescription');
+      dynamic sessionCandidate = session['candidate'];
+      print('sessionCandidate : $sessionCandidate');
+      dynamic candidate = RTCIceCandidate(
+          sessionCandidate, session['sdpMid'], session['sdpMlineIndex']);
+
+      await _peerConnection.addCandidate(candidate);
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  createAnswer() async {
+    try {
+      RTCSessionDescription rtcSessionDescription =
+          await _peerConnection.createAnswer({"OfferToReceiveVideo": true});
+      var session = parse(rtcSessionDescription.sdp);
+      var ansSessionBody = json.encode(session);
+      print('createAnswer sessionJsonBody : $ansSessionBody');
+
+      _peerConnection.setLocalDescription(rtcSessionDescription);
+
+      return ansSessionBody;
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  disposeRenderers() {
+    localVideoRenderer.dispose();
+    remoteVideoRenderer.dispose();
   }
 }

@@ -363,11 +363,6 @@ class _PeoplePageState extends State<PeoplePage> {
                                         Navigator.of(context).pop();
                                       },
                                       child: Text('Done')),
-                                  // FlatButton(
-                                  //     onPressed: () {
-                                  //       Navigator.of(context).pop();
-                                  //     },
-                                  //     child: Text('Cancel'))
                                 ],
                                 shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20)),
@@ -487,7 +482,7 @@ class UserWidget extends StatelessWidget {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => UserProfilesPage(
                         userModel: userModel,
-                        i: true,
+                        connected: true,
                       )));
             },
           ),

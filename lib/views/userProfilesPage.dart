@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,22 +6,26 @@ import 'package:learn_live_app/models/userModel.dart';
 import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/services/videoCallService.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
+import 'package:learn_live_app/views/videocallPage.dart';
 
 class UserProfilesPage extends StatefulWidget {
   UserModel userModel;
-  bool i;
-  UserProfilesPage({@required this.userModel, this.i});
+  bool connected;
+  UserModel currentUser;
+  UserProfilesPage(
+      {@required this.userModel, this.connected, this.currentUser});
   @override
   _UserProfilesPageState createState() => _UserProfilesPageState();
 }
 
 class _UserProfilesPageState extends State<UserProfilesPage> {
   UserServices userServices;
-  VideoCallService videoCallService;
+  VideoCallService _videoCallService;
+
   @override
   void initState() {
     userServices = new UserServices();
-    videoCallService = new VideoCallService();
+    _videoCallService = VideoCallService();
     super.initState();
   }
 
@@ -30,14 +35,26 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
       appBar: AppBar(
         title: Text(
             widget.userModel.name != null ? '${widget.userModel.name}' : ''),
-        actions: widget.i
+        actions: widget.connected
             ? null
             : <Widget>[
                 IconButton(
                     icon: Icon(Icons.videocam),
-                    onPressed: () {
+                    onPressed: () async {
                       print('Calling');
-                      videoCallService.joinMeeting(widget.userModel.name);
+                      String candidate;
+                      String offer =
+                          await _videoCallService.createOffer().then((_) {
+                        candidate = _videoCallService.candidates[0];
+                      });
+                      Navigator.of(context).push(CupertinoPageRoute(
+                          builder: (context) => VideoCallPage()));
+                      await userServices.requestVideoCall(
+                          widget.userModel.id,
+                          widget.currentUser.id,
+                          widget.currentUser.name,
+                          offer,
+                          candidate);
                     }),
               ],
       ),
@@ -107,9 +124,9 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
           borderRadius: BorderRadius.circular(80), color: Colors.greenAccent),
       child: new RaisedButton(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80)),
-        color: widget.i ? Colors.indigo[400] : Colors.red,
+        color: widget.connected ? Colors.indigo[400] : Colors.red,
         elevation: 0,
-        onPressed: widget.i
+        onPressed: widget.connected
             ? () async {
                 print('Connect');
                 requestSent = await userServices.sendConnectionRequest(id);
@@ -119,7 +136,7 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
                 print('Disconnect');
               },
         child: new Text(
-          widget.i ? 'Connect' : 'Disconnect',
+          widget.connected ? 'Connect' : 'Disconnect',
           style: TextStyle(
               color: Colors.white, fontSize: SizeConfig.font_size * 5),
         ),

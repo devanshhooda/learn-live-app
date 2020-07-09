@@ -1,6 +1,8 @@
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:learn_live_app/models/userModel.dart';
+import 'package:learn_live_app/services/notificationServices.dart';
 import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/utils/sizeConfig.dart';
 import 'package:learn_live_app/views/connectsPage.dart';
@@ -18,6 +20,8 @@ void main() {
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
+  final NotificationServices _notificationServices = new NotificationServices();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,6 +30,9 @@ class MyApp extends StatelessWidget {
           primarySwatch: Colors.deepPurple),
       title: 'Learn Live',
       home: LoginCheck(),
+      builder: BotToastInit(),
+      navigatorObservers: [BotToastNavigatorObserver()],
+      navigatorKey: _notificationServices.navigatorKey,
       debugShowCheckedModeBanner: false,
     );
   }
@@ -84,12 +91,13 @@ class _LearnLiveAppState extends State<LearnLiveApp>
 
   TabController controller;
   // UserModel userModel;
-  UserServices userServices = new UserServices();
+  UserServices userServices;
 
   @override
   void initState() {
     controller = TabController(length: 3, vsync: this);
     super.initState();
+    userServices = UserServices();
   }
 
   @override
@@ -97,47 +105,54 @@ class _LearnLiveAppState extends State<LearnLiveApp>
     return FutureBuilder<UserModel>(
         future: userServices.getUser(),
         builder: (BuildContext context, AsyncSnapshot<UserModel> snapshot) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Text('Learn  Live'),
-              centerTitle: true,
-              bottom: TabBar(
-                tabs: tabs,
-                controller: controller,
-                indicatorColor: Colors.white,
-              ),
-              actions: <Widget>[
-                IconButton(
-                    icon: Icon(Icons.notifications),
-                    onPressed: () {
-                      print('Notifcations Page');
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => NotificationsPage(
-                              receivedRequests: snapshot.hasData
-                                  ? snapshot.data.receivedRequests
-                                  : null)));
-                    })
-              ],
-            ),
-            body: TabBarView(
-              children: <Widget>[
-                PeoplePage(),
-                ConnectsPage(
-                  connectsList:
-                      snapshot.hasData ? snapshot.data.connects : null,
+          if (snapshot.hasData) {
+            return Scaffold(
+              appBar: AppBar(
+                title: Text('Learn  Live'),
+                centerTitle: true,
+                bottom: TabBar(
+                  tabs: tabs,
+                  controller: controller,
+                  indicatorColor: Colors.white,
                 ),
-                SettingsPage()
-              ],
-              controller: controller,
-            ),
-            // floatingActionButton: FloatingActionButton(
-            //   backgroundColor: Colors.deepPurpleAccent[400],
-            //   onPressed: () {
-            //     print('Call logs');
-            //   },
-            //   child: Icon(Icons.video_call),
-            // ),
-          );
+                actions: <Widget>[
+                  IconButton(
+                      icon: Icon(Icons.notifications),
+                      onPressed: () {
+                        print('Notifcations Page');
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => NotificationsPage(
+                                receivedRequests: snapshot.hasData
+                                    ? snapshot.data.receivedRequests
+                                    : null)));
+                      })
+                ],
+              ),
+              body: TabBarView(
+                children: <Widget>[
+                  PeoplePage(),
+                  ConnectsPage(
+                    currentUser: snapshot.hasData ? snapshot.data : null,
+                  ),
+                  SettingsPage()
+                ],
+                controller: controller,
+              ),
+              // floatingActionButton: FloatingActionButton(
+              //   backgroundColor: Colors.deepPurpleAccent[400],
+              //   onPressed: () {
+              //     print('Call logs');
+              //   },
+              //   child: Icon(Icons.video_call),
+              // ),
+            );
+          } else {
+            return Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
         });
   }
 }
