@@ -4,24 +4,29 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:learn_live_app/models/userModel.dart';
+import 'package:learn_live_app/services/notificationServices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserServices with ChangeNotifier {
-  String url = 'http://3.7.45.191:3000/api/user';
-  // String url = 'http://192.168.43.223:3000/api/user';
+  // String url = 'http://3.7.45.191:3000/api/user';
+  String url = 'http://192.168.43.223:3000/api/user';
   String token, userId;
   var userDetails;
   SharedPreferences sharedPreferences;
   FirebaseMessaging _firebaseMessaging = new FirebaseMessaging();
   String fcmToken;
+  NotificationServices _notificationServices = new NotificationServices();
 
   UserServices() {
     _firebaseMessaging.configure(
         onMessage: (Map<String, dynamic> message) async {
+      _messageHandler(message);
       print('onMessage : $message');
     }, onLaunch: (Map<String, dynamic> message) async {
+      _messageHandler(message);
       print('onLaunch : $message');
     }, onResume: (Map<String, dynamic> message) async {
+      _messageHandler(message);
       print('onResume : $message');
     });
 
@@ -30,6 +35,10 @@ class UserServices with ChangeNotifier {
         fcmToken = _token;
       });
     }
+  }
+
+  _messageHandler(Map<String, dynamic> message) async {
+    await _notificationServices.incomingCallNotification(message);
   }
 
   addTokenToSP(String token) async {
@@ -378,10 +387,30 @@ class UserServices with ChangeNotifier {
     }
   }
 
-  // Future<bool> requestVideoCall() async {
-  //   String requestVideoCallUrl = url + '';
-
-  // }
+  Future<bool> requestVideoCall(
+      String sendingId, String receivingId, String callerName) async {
+    String requestVideoCallUrl = url + '/sendCallRequest';
+    try {
+      token = await getTokenFromSP();
+      var body = json.encode({
+        'sendingId': sendingId,
+        'receivingId': receivingId,
+        'callerName': callerName
+      });
+      http.Response response = await http.put(
+        requestVideoCallUrl,
+        headers: <String, String>{
+          'Authorization': 'jwt ' + token,
+          "Content-Type": "application/json"
+        },
+        body: body,
+      );
+      print('response : ${response.body}');
+      var data = json.decode(response.body);
+    } catch (e) {
+      print(e);
+    }
+  }
 
   Future<bool> signOut() async {
     try {

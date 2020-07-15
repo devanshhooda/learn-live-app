@@ -8,8 +8,10 @@ import 'package:learn_live_app/utils/sizeConfig.dart';
 
 class UserProfilesPage extends StatefulWidget {
   UserModel userModel;
-  bool i;
-  UserProfilesPage({@required this.userModel, this.i});
+  UserModel currentUser;
+  bool fromPeoplesPage;
+  UserProfilesPage(
+      {@required this.userModel, this.fromPeoplesPage, this.currentUser});
   @override
   _UserProfilesPageState createState() => _UserProfilesPageState();
 }
@@ -30,14 +32,20 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
       appBar: AppBar(
         title: Text(
             widget.userModel.name != null ? '${widget.userModel.name}' : ''),
-        actions: widget.i
+        actions: widget.fromPeoplesPage
             ? null
             : <Widget>[
                 IconButton(
                     icon: Icon(Icons.videocam),
-                    onPressed: () {
+                    onPressed: () async {
                       print('Calling');
-                      videoCallService.joinMeeting(widget.userModel.name);
+                      videoCallService.joinMeeting(
+                          userName: widget.userModel.name,
+                          sendingId: widget.currentUser.id,
+                          receivingId: widget.userModel.id);
+                      await userServices.requestVideoCall(widget.currentUser.id,
+                          widget.userModel.id, widget.currentUser.name);
+                      Navigator.of(context).pop();
                     }),
               ],
       ),
@@ -107,9 +115,9 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
           borderRadius: BorderRadius.circular(80), color: Colors.greenAccent),
       child: new RaisedButton(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(80)),
-        color: widget.i ? Colors.indigo[400] : Colors.red,
+        color: widget.fromPeoplesPage ? Colors.indigo[400] : Colors.red,
         elevation: 0,
-        onPressed: widget.i
+        onPressed: widget.fromPeoplesPage
             ? () async {
                 print('Connect');
                 requestSent = await userServices.sendConnectionRequest(id);
@@ -119,7 +127,7 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
                 print('Disconnect');
               },
         child: new Text(
-          widget.i ? 'Connect' : 'Disconnect',
+          widget.fromPeoplesPage ? 'Connect' : 'Disconnect',
           style: TextStyle(
               color: Colors.white, fontSize: SizeConfig.font_size * 5),
         ),

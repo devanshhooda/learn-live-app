@@ -487,7 +487,7 @@ class UserWidget extends StatelessWidget {
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => UserProfilesPage(
                         userModel: userModel,
-                        i: true,
+                        fromPeoplesPage: true,
                       )));
             },
           ),

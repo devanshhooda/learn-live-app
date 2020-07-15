@@ -7,39 +7,27 @@ import 'package:jitsi_meet/room_name_constraint_type.dart';
 
 class VideoCallService {
   final serverText = TextEditingController();
-  // _onAudioOnlyChanged(bool value) {
-  //   setState(() {
-  //     isAudioOnly = value;
-  //   });
-  // }
 
-  // _onAudioMutedChanged(bool value) {
-  //   setState(() {
-  //     isAudioMuted = value;
-  //   });
-  // }
-
-  // _onVideoMutedChanged(bool value) {
-  //   setState(() {
-  //     isVideoMuted = value;
-  //   });
-  // }
-
-  joinMeeting(String userName) async {
+  joinMeeting({String userName, String sendingId, String receivingId}) async {
     String serverUrl =
         serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
 
+    print('userName : $userName');
+    print('sendingId : $sendingId');
+    print('receivingId : $receivingId');
+
     try {
       var options = JitsiMeetingOptions()
+        // ..room = '$sendingId-$receivingId'
         ..room = 'learnliveroom'
         ..serverURL = serverUrl
-        ..subject = 'Video Call'
+        ..subject = userName != null ? '$userName' : 'user name'
         ..userDisplayName = userName
         ..userEmail = 'fake@email.com'
         ..audioOnly = false
         ..audioMuted = false
         ..videoMuted = false
-        ..inviteEnabled = true
+        ..inviteEnabled = false
         ..chatEnabled = true;
 
       // debugPrint("JitsiMeetingOptions: $options");
@@ -53,7 +41,7 @@ class VideoCallService {
           debugPrint("${options.room} terminated with message: $message");
         }),
         // by default, plugin default constraints are used
-        //roomNameConstraints: new Map(), // to disable all constraints
+        roomNameConstraints: new Map(), // to disable all constraints
         //roomNameConstraints: customContraints, // to use your own constraint(s)
       );
     } catch (error) {

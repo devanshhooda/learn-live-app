@@ -6,9 +6,9 @@ import 'package:learn_live_app/utils/sizeConfig.dart';
 import 'package:learn_live_app/views/userProfilesPage.dart';
 
 class ConnectsPage extends StatefulWidget {
-  List connectsList;
+  UserModel currentUser;
 
-  ConnectsPage({this.connectsList});
+  ConnectsPage({this.currentUser});
   @override
   _ConnectsPageState createState() => _ConnectsPageState();
 }
@@ -27,13 +27,14 @@ class _ConnectsPageState extends State<ConnectsPage> {
       body: Container(
           height: SizeConfig.screenHeight,
           width: SizeConfig.screenWidth,
-          child: (widget.connectsList != null && widget.connectsList.isNotEmpty)
+          child: (widget.currentUser.connects != null &&
+                  widget.currentUser.connects.isNotEmpty)
               ? ListView.builder(
-                  itemCount: widget.connectsList.length,
+                  itemCount: widget.currentUser.connects.length,
                   itemBuilder: (context, i) {
                     return FutureBuilder<UserModel>(
-                        future:
-                            userServices.getUserByUid(widget.connectsList[i]),
+                        future: userServices
+                            .getUserByUid(widget.currentUser.connects[i]),
                         builder: (BuildContext context,
                             AsyncSnapshot<UserModel> snapshot) {
                           if (snapshot.hasData) {
@@ -46,26 +47,28 @@ class _ConnectsPageState extends State<ConnectsPage> {
                                       'assets/profile_pic.svg',
                                     ),
                                   ),
-                                  title: Row(
-                                    children: <Widget>[
-                                      Text(snapshot.data.name != null
-                                          ? '${snapshot.data.name}, '
-                                          : ''),
-                                      Text(snapshot.data.age != null
-                                          ? '${snapshot.data.age}'
-                                          : '')
-                                    ],
-                                  ),
-                                  subtitle: Row(
-                                    children: <Widget>[
-                                      Text(snapshot.data.profession != null
-                                          ? '${snapshot.data.profession}, '
-                                          : ''),
-                                      Text(snapshot.data.company != null
-                                          ? '${snapshot.data.company}'
-                                          : ''),
-                                    ],
-                                  ),
+                                  title: (snapshot.data.name == null &&
+                                          snapshot.data.age == null)
+                                      ? null
+                                      : (snapshot.data.name != null &&
+                                              snapshot.data.age == null)
+                                          ? Text('${snapshot.data.name}')
+                                          : (snapshot.data.name == null &&
+                                                  snapshot.data.age != null)
+                                              ? Text('${snapshot.data.age}')
+                                              : Text(
+                                                  '${snapshot.data.name}, ${snapshot.data.age}'),
+                                  subtitle: (snapshot.data.profession == null &&
+                                          snapshot.data.company == null)
+                                      ? null
+                                      : (snapshot.data.profession != null &&
+                                              snapshot.data.company == null)
+                                          ? Text('${snapshot.data.profession}')
+                                          : (snapshot.data.profession == null &&
+                                                  snapshot.data.company != null)
+                                              ? Text('${snapshot.data.company}')
+                                              : Text(
+                                                  '${snapshot.data.profession}, ${snapshot.data.company}'),
                                   // trailing: IconButton(
                                   //   icon: Icon(Icons.call),
                                   //   onPressed: () {
@@ -79,7 +82,9 @@ class _ConnectsPageState extends State<ConnectsPage> {
                                             builder: (context) =>
                                                 UserProfilesPage(
                                                   userModel: snapshot.data,
-                                                  i: false,
+                                                  currentUser:
+                                                      widget.currentUser,
+                                                  fromPeoplesPage: false,
                                                 )));
                                   },
                                 ),

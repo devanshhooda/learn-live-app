@@ -123,8 +123,7 @@ class _LearnLiveAppState extends State<LearnLiveApp>
               children: <Widget>[
                 PeoplePage(),
                 ConnectsPage(
-                  connectsList:
-                      snapshot.hasData ? snapshot.data.connects : null,
+                  currentUser: snapshot.hasData ? snapshot.data : null,
                 ),
                 SettingsPage()
               ],
