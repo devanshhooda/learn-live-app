@@ -8,8 +8,8 @@ import 'package:learn_live_app/services/notificationServices.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserServices with ChangeNotifier {
-  // String url = 'http://3.7.45.191:3000/api/user';
-  String url = 'http://192.168.43.223:3000/api/user';
+  String url = 'http://3.7.45.191:3000/api/user';
+  // String url = 'http://192.168.43.223:3000/api/user';
   String token, userId;
   var userDetails;
   SharedPreferences sharedPreferences;

@@ -1,20 +1,19 @@
 import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-// import 'package:learn_live_app/services/userServices.dart';
 import 'package:learn_live_app/services/videoCallService.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationServices {
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   VideoCallService videoCallService = new VideoCallService();
-  // UserServices _userServices = new UserServices();
+  SharedPreferences sharedPreferences;
   var _initializationSettings;
   String candidate;
   GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
-  String sendingId, receivingId, callerName;
+  // String sendingId, receivingId, callerName;
 
   NotificationServices() {
     _initNotifs();
@@ -41,11 +40,15 @@ class NotificationServices {
     try {
       var notification = message['notification'];
       String notifTitle = notification['title'];
-      callerName = notification['body'];
+      String callerName = notification['body'];
       String notifSubtitle = '$callerName is calling you...';
       var data = message['data'];
-      sendingId = data['sendingId'];
-      receivingId = data['receivingId'];
+      String sendingId = data['sendingId'];
+      String receivingId = data['receivingId'];
+      _saveInfoToSP(
+          callerName: callerName,
+          sendingId: sendingId,
+          receivingId: receivingId);
       // String callerId = message['data']['message'];
       // BotToast.showNotification(
       //     duration: Duration(minutes: 1),
@@ -83,17 +86,26 @@ class NotificationServices {
     if (payload != null) {
       print(payload);
       if (payload == 'Call received') {
-        answerCall();
+        _answerCall();
       }
     }
   }
 
-  answerCall() async {
+  _saveInfoToSP(
+      {String sendingId, String receivingId, String callerName}) async {
+    sharedPreferences = await SharedPreferences.getInstance();
+    sharedPreferences.setString('callerName', callerName);
+    sharedPreferences.setString('receivingId', receivingId);
+    sharedPreferences.setString('sendingId', sendingId);
+  }
+
+  _answerCall() async {
+    String callerName = sharedPreferences.getString('callerName');
+    String sendingId = sharedPreferences.getString('sendingId');
+    String receivingId = sharedPreferences.getString('receivingId');
     print(
-        'callerName : ${this.callerName}, sendingId : ${this.sendingId}, receivingId : ${this.receivingId}');
+        'callerName : $callerName, sendingId : $sendingId, receivingId : $receivingId');
     videoCallService.joinMeeting(
-        userName: this.callerName,
-        sendingId: this.sendingId,
-        receivingId: this.receivingId);
+        userName: callerName, sendingId: sendingId, receivingId: receivingId);
   }
 }

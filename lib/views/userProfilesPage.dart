@@ -45,7 +45,6 @@ class _UserProfilesPageState extends State<UserProfilesPage> {
                           receivingId: widget.userModel.id);
                       await userServices.requestVideoCall(widget.currentUser.id,
                           widget.userModel.id, widget.currentUser.name);
-                      Navigator.of(context).pop();
                     }),
               ],
       ),
